@@ -13,10 +13,6 @@ using namespace std;
 #define SUCK_DIRT		3
 #define TURN_OFF		4
 
-// File parameters
-#define BUFFER_SIZE		255
-#define PATH			"out.csv"
-
 // World parameters
 #define M				10		// World num rows
 #define N				10		// World num cols
@@ -38,6 +34,7 @@ class Robot{
 		int j;
 		int dir;
 
+		// Memory states
 		bool left_mode = 0;
 		bool turn_mode = 0;
 
@@ -156,9 +153,6 @@ class Robot{
 
 			int action = random_reflex_robot(world);
 
-			if(DEBUG)
-				printf("ACTION: %d\n",action);
-
 			switch(action){
 				case GO_FORWARD:
 					if(senseWall(world))
@@ -203,7 +197,7 @@ class Robot{
 void set_world(char world[M][N]);
 
 // Assess amount of dirt
-int count_dirt(char world[M][N]);
+int count_elements(char world[M][N],char element);
 
 // Display world
 void display(Robot robot, char world[M][N]);
@@ -213,8 +207,8 @@ float avg(vector<int> vec);
 
 int main(int argc, char **argv){
 
-	vector<int> original_dirt;
-	vector<int> final_dirt;
+	vector<int> original_clean;
+	vector<int> final_clean;
 	vector<int> iterations;
 
 	char world[M][N];
@@ -227,7 +221,7 @@ int main(int argc, char **argv){
 	for(int ep = 0; ep < NUM_EP; ep++){
 
 		set_world(world);
-		original_dirt.push_back(count_dirt(world));
+		original_clean.push_back(count_elements(world,' '));
 
 		robot.set();
 		
@@ -241,21 +235,21 @@ int main(int argc, char **argv){
 			// Sensing and acting
 			robot.act(world);
 
-			if(count_dirt(world) == 0)
+			if(count_elements(world,'.') == 0)
 				break;
 
 		}
 
-		final_dirt.push_back(count_dirt(world));
+		final_clean.push_back(count_elements(world,' '));
 		iterations.push_back(it);
 
-		if(DEBUG)
-			printf("original_dirt: %d, final_dirt: %d, iterations: %d\n",original_dirt.back(),final_dirt.back(),iterations.back());
+		if(DEBUG && ep == NUM_EP-1)
+			printf("original_clean: %d, final_clean: %d, iterations: %d\n",original_clean.back(),final_clean.back(),iterations.back());
 
 	}
 
 	printf("Averages:\n");
-	printf("original_dirt: %.3f, final_dirt: %.3f, iterations: %.3f\n",avg(original_dirt),avg(final_dirt),avg(iterations));
+	printf("original_clean: %.3f, final_clean: %.3f, iterations: %.3f\n",avg(original_clean),avg(final_clean),avg(iterations));
 	
 }
 
@@ -267,13 +261,13 @@ float avg(vector<int> vec){
 	return ((float)acc)/vec.size();
 }
 
-int count_dirt(char world[M][N]){
+int count_elements(char world[M][N],char element){
 
 	int count = 0;
 
 	for(int i = 0; i < M; i++)
 		for(int j = 0; j < N; j++)
-			if(world[i][j] == '.')
+			if(world[i][j] == element)
 				count++;
 
 	return count;
